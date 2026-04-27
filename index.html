@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>助成金AIポータル v2｜キャリアアップ・業務改善</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --navy: #0d1b35;
+      --navy2: #162340;
+      --gold: #c89b3c;
+      --gold-light: #f0d080;
+      --teal: #1a8a7a;
+      --teal-soft: #e6f5f3;
+      --red: #c0392b;
+      --red-soft: #fdf0ee;
+      --amber: #d97706;
+      --amber-soft: #fffbeb;
+      --green: #166534;
+      --green-soft: #dcfce7;
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --border: #dde3ee;
+      --text: #1a2035;
+      --muted: #6b7a9a;
+      --radius: 14px;
+      --shadow: 0 4px 20px rgba(13,27,53,0.08);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ヘッダー */
+    .header {
+      background: var(--navy);
+      color: #fff;
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .header-brand { display: flex; align-items: center; gap: 12px; }
+    .header-logo {
+      width: 32px; height: 32px;
+      background: var(--gold);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 16px; color: var(--navy);
+    }
+    .header-title { font-weight: 700; font-size: 16px; }
+    .header-sub { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 1px; }
+    .header-actions { display: flex; gap: 8px; }
+    .hbtn {
+      border: none; border-radius: 8px; padding: 7px 14px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      font-family: inherit;
+    }
+    .hbtn-ghost { background: rgba(255,255,255,0.12); color: #fff; }
+    .hbtn-gold { background: var(--gold); color: var(--navy); }
+    .hbtn-danger { background: rgba(192,57,43,0.3); color: #fca5a5; }
+
+    /* タブ */
+    .grant-tabs {
+      background: var(--navy2);
+      display: flex; padding: 0 24px; gap: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .grant-tab {
+      padding: 13px 22px; color: rgba(255,255,255,0.5);
+      border: none; background: none; cursor: pointer;
+      font-size: 14px; font-weight: 700; font-family: inherit;
+      border-bottom: 3px solid transparent; margin-bottom: -1px;
+      transition: color .2s, border-color .2s;
+    }
+    .grant-tab:hover { color: rgba(255,255,255,0.8); }
+    .grant-tab.active { color: var(--gold-light); border-bottom-color: var(--gold); }
+
+    /* メイン */
+    .main { max-width: 1180px; margin: 0 auto; padding: 20px 20px 40px; }
+    .grant-pane { display: none; }
+    .grant-pane.active { display: block; }
+
+    /* 2カラムレイアウト */
+    .layout { display: grid; grid-template-columns: 1fr 420px; gap: 16px; align-items: start; }
+    @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+
+    /* パネル */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .panel-head {
+      padding: 12px 18px;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 700; font-size: 13px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .panel-head .badge {
+      background: var(--gold); color: var(--navy);
+      padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 900;
+    }
+    .panel-body { padding: 16px 18px; }
+
+    /* グリッド */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .g4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+    @media (max-width: 700px) { .g2,.g3,.g4 { grid-template-columns: 1fr; } }
+
+    /* フィールド */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label {
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .04em;
+    }
+    .field input, .field select, .field textarea {
+      border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 8px 12px; font-size: 13px; font-family: inherit;
+      background: #fff; width: 100%; color: var(--text);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline: none; border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(26,138,122,.12);
+    }
+    .field input[readonly] { background: #f8fafc; color: var(--muted); }
+    .field .hint { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+    /* トグルグループ */
+    .toggle-group { display: flex; gap: 0; }
+    .toggle-group input[type=radio] { display: none; }
+    .toggle-group label {
+      flex: 1; text-align: center; padding: 8px 6px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      border: 1.5px solid var(--border); background: #fff;
+      color: var(--muted); transition: all .15s;
+    }
+    .toggle-group label:first-of-type { border-radius: 10px 0 0 10px; }
+    .toggle-group label:last-of-type { border-radius: 0 10px 10px 0; }
+    .toggle-group label:not(:first-of-type) { border-left: none; }
+    .toggle-group input[type=radio]:checked + label {
+      background: var(--navy); color: #fff; border-color: var(--navy);
+    }
+
+    /* ボタン */
+    .btn { border: none; border-radius: 10px; padding: 10px 20px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .15s; }
+    .btn-primary { background: var(--teal); color: #fff; }
+    .btn-primary:hover { background: #156b5e; }
+    .btn-navy { background: var(--navy); color: #fff; }
+    .btn-navy:hover { background: var(--navy2); }
+    .btn-ghost { background: #eef2f7; color: var(--text); border: 1.5px solid var(--border); }
+    .btn-ghost:hover { background: #e2e8f3; }
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+
+    /* ステータスバッジ */
+    .badge-ok { display:inline-flex; align-items:center; gap:4px; background:var(--green-soft); color:var(--green); padding:3px 10px; border-radius:99px; font-size:12px; font-weight:700; }
+    .badge-warn { display:inline-flex; align-items:center; gap:4px; background:var(--amber-soft); color:var(--amber); padding:3px 10px; border-radius:99px; font-size:12px; font-weight:700; }
+    .badge-ng { display:inline-flex; align-items:center; gap:4px; background:var(--red-soft); color:var(--red); padding:3px 10px; border-radius:99px; font-size:12px; font-weight:700; }
+
+    /* 判定レーティング */
+    .rating-a { font-size:24px; font-weight:900; color:var(--green); }
+    .rating-b { font-size:24px; font-weight:900; color:var(--amber); }
+    .rating-c { font-size:24px; font-weight:900; color:var(--red); }
+
+    /* チェック項目 */
+    .check-list { display: flex; flex-direction: column; gap: 6px; }
+    .check-item {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 10px 12px; border-radius: 10px; border: 1px solid transparent;
+    }
+    .check-item.ok { background: #f0fdf4; border-color: #bbf7d0; }
+    .check-item.warn { background: var(--amber-soft); border-color: #fde68a; }
+    .check-item.ng { background: var(--red-soft); border-color: #fecaca; }
+    .check-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .check-title { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+    .check-detail { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    /* 試算ボックス */
+    .subsidy-box {
+      background: linear-gradient(135deg, var(--navy) 0%, #1e3060 100%);
+      border-radius: var(--radius); padding: 20px; color: #fff; margin-bottom: 14px;
+    }
+    .subsidy-box .label { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+    .subsidy-amount { font-size: 36px; font-weight: 900; color: var(--gold-light); font-family: 'IBM Plex Mono', monospace; }
+    .subsidy-sub { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+    .subsidy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    .subsidy-item { background: rgba(255,255,255,0.07); border-radius: 10px; padding: 10px; }
+    .subsidy-item .s-label { font-size: 11px; color: rgba(255,255,255,0.5); }
+    .subsidy-item .s-val { font-size: 16px; font-weight: 700; color: #fff; font-family: 'IBM Plex Mono', monospace; }
+    .subsidy-breakdown { background: rgba(255,255,255,0.06); border-radius: 10px; padding: 12px; margin-top: 12px; font-size: 12px; color: rgba(255,255,255,0.75); white-space: pre-line; font-family: 'IBM Plex Mono', monospace; line-height: 1.7; }
+
+    /* 期限バー */
+    .deadline-box {
+      background: #f8f9ff; border: 1.5px solid #c7d2fe; border-radius: 12px; padding: 14px;
+      margin-bottom: 14px;
+    }
+    .deadline-box h4 { font-size: 13px; font-weight: 700; color: #3730a3; margin-bottom: 8px; }
+    .deadline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .deadline-item .dl { font-size: 11px; color: var(--muted); }
+    .deadline-item .dv { font-size: 14px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+
+    /* 出力タブ */
+    .out-tabs { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
+    .out-tab {
+      border: 1.5px solid var(--border); background: #fff;
+      border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer;
+      color: var(--muted); font-family: inherit; transition: all .15s;
+    }
+    .out-tab:hover { background: var(--teal-soft); }
+    .out-tab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+    .out-pane { display: none; }
+    .out-pane.active { display: block; }
+    textarea.out {
+      width: 100%; min-height: 280px; border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 12px; font-size: 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      line-height: 1.8; background: #fafbfc; resize: vertical; color: var(--text);
+    }
+
+    /* AI相談 */
+    .ai-box { border: 1.5px solid var(--border); border-radius: 12px; padding: 14px; margin-top: 14px; }
+    .ai-box h4 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+    .ai-box textarea { width:100%; border: 1.5px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; font-family:inherit; min-height:80px; resize:vertical; }
+    .ai-answer { margin-top:10px; padding:12px; background:#f8fbff; border-radius:8px; font-size:13px; line-height:1.8; white-space:pre-wrap; min-height:80px; }
+
+    /* ローディング */
+    .loading { display:none; padding: 40px; text-align: center; color: var(--muted); }
+    .loading.active { display: block; }
+    .loading-spinner {
+      width: 32px; height: 32px; border: 3px solid var(--border);
+      border-top-color: var(--teal); border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 賃金計算器 */
+    .wage-calc { background: #f8f9ff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 14px; margin-top: 10px; }
+    .wage-calc h4 { font-size: 12px; font-weight: 700; color: #3730a3; margin-bottom: 10px; }
+    .calc-result { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 700; color: var(--navy); margin-top: 8px; }
+    .calc-result.ok { color: var(--green); }
+    .calc-result.ng { color: var(--red); }
+
+    /* フィールドグループ区切り */
+    .section-sep { border: none; border-top: 1px dashed var(--border); margin: 14px 0; }
+
+    /* 免責 */
+    .disclaimer {
+      margin-top: 20px; padding: 14px; border-radius: 12px;
+      background: #f8fafc; border: 1px solid var(--border);
+      font-size: 11px; color: var(--muted); line-height: 1.8;
+    }
+
+    /* スクロールバー */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #c1c9dc; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <div class="header-logo">AI</div>
+    <div>
+      <div class="header-title">助成金AIポータル v2</div>
+      <div class="header-sub">キャリアアップ・両立支援等・業務改善助成金 申請支援ツール（令和8年度版）</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="hbtn hbtn-ghost" onclick="saveDraft()">💾 保存</button>
+    <button class="hbtn hbtn-ghost" onclick="exportPdf()">📄 PDF</button>
+    <button class="hbtn hbtn-gold" onclick="loadDemo()">デモ読込</button>
+    <button class="hbtn hbtn-danger" onclick="clearAll()">クリア</button>
+  </div>
+</header>
+
+<div class="grant-tabs">
+  <button class="grant-tab active" onclick="switchGrant('career-up')">✦ キャリアアップ助成金（正社員化コース）</button>
+  <button class="grant-tab" onclick="switchGrant('gyomu-kaizen')">✦ 業務改善助成金</button>
+  <button class="grant-tab" onclick="switchGrant('ryoritsu')">✦ 両立支援等助成金</button>
+</div>
+
+<main class="main">
+
+<!-- ========== キャリアアップ助成金 ========== -->
+<div id="pane-career-up" class="grant-pane active">
+  <div class="layout">
+
+    <!-- 左カラム：入力 -->
+    <div>
+
+      <!-- 基本情報 -->
+      <div class="panel">
+        <div class="panel-head"><span class="badge">1</span> 基本情報</div>
+        <div class="panel-body">
+          <div class="g3">
+            <div class="field"><label>顧客名（会社名）</label><input id="cu-company" placeholder="株式会社〇〇" /></div>
+            <div class="field"><label>従業員数</label><input id="cu-employees" type="number" min="1" value="20" /></div>
+            <div class="field"><label>企業規模</label>
+              <select id="cu-size">
+                <option value="small">中小企業</option>
+                <option value="large">大企業</option>
+              </select>
+            </div>
+          </div>
+          <div class="g2" style="margin-top:10px;">
+            <div class="field"><label>キャリアアップ計画 開始日</label><input id="cu-plan-start" type="date" /></div>
+            <div class="field"><label>キャリアアップ計画 終了日</label><input id="cu-plan-end" type="date" /></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 就業規則等 -->
+      <div class="panel">
+        <div class="panel-head"><span class="badge">2</span> 就業規則等の整備状況</div>
+        <div class="panel-body">
+          <div class="g2">
+            <div class="field"><label>正社員転換制度の規定あり</label>
+              <select id="cu-rule-exists"><option value="true">はい</option><option value="false">いいえ</option></select>
+            </div>
+            <div class="field"><label>手続き・要件・実施時期が客観的に規定</label>
+              <select id="cu-rule-objective"><option value="true">はい</option><option value="false">いいえ・不明</option></select>
+            </div>
+            <div class="field"><label>正社員に賞与または退職金が適用</label>
+              <select id="cu-bonus-retire"><option value="true">はい</option><option value="false">いいえ</option></select>
+            </div>
+            <div class="field"><label>正社員に昇給が適用</label>
+              <select id="cu-raise"><option value="true">はい</option><option value="false">いいえ</option></select>
+            </div>
+            <div class="field"><label>非正規に賃金差の規定あり（就業規則等で確認可）</label>
+              <select id="cu-wage-diff"><option value="true">はい</option><option value="false">いいえ・不明</option></select>
+            </div>
+            <div class="field"><label>添付書類は原本または複写（加工・転記なし）</label>
+              <select id="cu-original"><option value="true">はい</option><option value="false">一部加工・不明</option></select>
+            </div>
+          </div>
+          <hr class="section-sep">
+          <p style="font-size:12px; font-weight:700; color:var(--muted); margin-bottom:8px;">加算要件（該当する場合のみ）</p>
+          <div class="g3">
+            <div class="field"><label>①転換制度を今回新たに規定</label>
+              <select id="cu-new-rule"><option value="false">いいえ</option><option value="true">はい（+20万円）</option></select>
+            </div>
+            <div class="field"><label>②多様な正社員制度を新たに規定</label>
+              <select id="cu-new-diverse"><option value="false">いいえ</option><option value="true">はい（+40万円）</option></select>
+            </div>
+            <div class="field"><label>③転換情報をWebサイト等で公表済み</label>
+              <select id="cu-info-pub"><option value="false">いいえ</option><option value="true">はい（+20万円）</option></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 対象労働者 -->
+      <div class="panel">
+        <div class="panel-head"><span class="badge">3</span> 対象労働者</div>
+        <div class="panel-body">
+          <div class="g4">
+            <div class="field"><label>氏名</label><input id="cu-worker" placeholder="山田 太郎" /></div>
+            <div class="field"><label>雇入日</label><input id="cu-hire" type="date" /></div>
+            <div class="field"><label>転換日</label><input id="cu-conv" type="date" /></div>
+            <div class="field"><label>転換前の雇用期間（月）</label><input id="cu-tenure" type="number" min="0" value="9" /></div>
+          </div>
+          <div class="g4" style="margin-top:10px;">
+            <div class="field"><label>転換前雇用区分</label>
+              <select id="cu-before"><option>有期</option><option>無期</option><option>派遣</option></select>
+            </div>
+            <div class="field"><label>転換後雇用区分</label>
+              <select id="cu-after">
+                <option>正社員</option>
+                <option>勤務地限定正社員</option>
+                <option>職務限定正社員</option>
+                <option>短時間正社員</option>
+              </select>
+            </div>
+            <div class="field"><label>転換後に試用期間あり</label>
+              <select id="cu-probation"><option value="false">いいえ</option><option value="true">はい（申請期間ズレ注意）</option></select>
+            </div>
+            <div class="field"><label>社会保険加入（転換後）</label>
+              <select id="cu-social"><option value="true">加入済み</option><option value="false">未加入・不明</option></select>
+            </div>
+          </div>
+          <div class="g4" style="margin-top:10px;">
+            <div class="field"><label>外国人除外類型（技能実習等）</label>
+              <select id="cu-foreign"><option value="false">いいえ</option><option value="true">はい（対象外）</option></select>
+            </div>
+            <div class="field"><label>新規学卒者</label>
+              <select id="cu-newgrad"><option value="false">いいえ</option><option value="true">はい</option></select>
+            </div>
+            <div class="field"><label>雇入れから何か月経過（学卒の場合）</label>
+              <input id="cu-grad-months" type="number" min="0" placeholder="例：8" />
+            </div>
+            <div class="field"><label>定年年齢超・定年まで1年未満</label>
+              <select id="cu-retire"><option value="false">いいえ</option><option value="true">はい（対象外）</option></select>
+            </div>
+          </div>
+          <hr class="section-sep">
+          <p style="font-size:12px; font-weight:700; color:var(--muted); margin-bottom:8px;">重点支援対象者（支給額が上がります）</p>
+          <div class="g3">
+            <div class="field"><label>重点支援区分</label>
+              <select id="cu-priority">
+                <option value="none">該当なし（通常）</option>
+                <option value="a">a：雇入れから3年以上の有期</option>
+                <option value="b">b：3年未満で①②いずれも該当</option>
+                <option value="c">c：派遣・母子家庭等・訓練修了者</option>
+              </select>
+            </div>
+            <div class="field"><label>【b用】過去5年間の正規雇用期間（月）</label>
+              <input id="cu-past5y" type="number" min="0" placeholder="例：6" />
+            </div>
+            <div class="field"><label>【b用】過去1年以内に正規雇用されていた</label>
+              <select id="cu-past1y"><option value="false">いいえ</option><option value="true">はい</option></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 賃金・申請期限 -->
+      <div class="panel">
+        <div class="panel-head"><span class="badge">4</span> 賃金・申請期限</div>
+        <div class="panel-body">
+          <div class="field" style="margin-bottom:12px;"><label>賃金比較方法</label>
+            <select id="cu-wage-method" onchange="toggleHourly()">
+              <option value="total">総額比較（所定労働時間・支給形態に変更なし）</option>
+              <option value="hourly">時給換算比較（所定労働時間または支給形態が変わる場合）</option>
+            </select>
+            <span class="hint">所定労働時間や月給↔時給の変更がある場合は「時給換算比較」を選択してください（パンフP.27）</span>
+          </div>
+
+          <!-- 総額比較 -->
+          <div id="wage-total-section">
+            <div class="g2">
+              <div class="field"><label>転換前6か月 賃金総額（円）</label>
+                <input id="cu-wage-before" type="number" min="0" value="1200000" oninput="calcWageRate()" />
+                <span class="hint">基本給＋定額手当（通勤費・残業代・賞与除く）</span>
+              </div>
+              <div class="field"><label>転換後6か月 賃金総額（円）</label>
+                <input id="cu-wage-after" type="number" min="0" value="1260000" oninput="calcWageRate()" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 時給換算 -->
+          <div id="wage-hourly-section" style="display:none;">
+            <div class="g4">
+              <div class="field"><label>転換前6か月 賃金総額（円）</label><input id="cu-wage-before-h" type="number" min="0" value="900000" oninput="calcWageRateH()" /></div>
+              <div class="field"><label>転換前6か月 総所定労働時間</label><input id="cu-hours-before" type="number" min="0" step="0.5" value="720" oninput="calcWageRateH()" /><span class="hint">例：週30h×6か月(26週)=780h</span></div>
+              <div class="field"><label>転換後6か月 賃金総額（円）</label><input id="cu-wage-after-h" type="number" min="0" value="1176000" oninput="calcWageRateH()" /></div>
+              <div class="field"><label>転換後6か月 総所定労働時間</label><input id="cu-hours-after" type="number" min="0" step="0.5" value="1040" oninput="calcWageRateH()" /></div>
+            </div>
+          </div>
+
+          <div class="wage-calc" id="wage-calc-display">
+            <h4>📊 賃金増額率 リアルタイム計算</h4>
+            <div id="wage-calc-result" class="calc-result">— 金額を入力してください</div>
+            <div id="wage-calc-detail" style="font-size:11px;color:var(--muted);margin-top:4px;font-family:'IBM Plex Mono',monospace;"></div>
+          </div>
+
+          <hr class="section-sep">
+          <div class="g3">
+            <div class="field"><label>6か月分賃金 支払日（実際の日付）</label>
+              <input id="cu-paydate" type="date" oninput="calcDeadline()" />
+              <span class="hint">就業規則の時間外手当支給まで含む実際の支払日</span>
+            </div>
+            <div class="field"><label>提出予定日</label>
+              <input id="cu-submit" type="date" oninput="calcDeadline()" />
+            </div>
+            <div class="field"><label>賃金締切日（何日締め）</label>
+              <input id="cu-closing" type="number" min="1" max="31" placeholder="例：31（月末）" />
+              <span class="hint">転換日が賃金締切日の翌日でない場合に入力</span>
+            </div>
+          </div>
+          <div id="deadline-preview" style="margin-top:10px; display:none;" class="deadline-box">
+            <h4>📅 申請期限プレビュー</h4>
+            <div class="deadline-grid" id="deadline-grid"></div>
+          </div>
+
+          <hr class="section-sep">
+          <p style="font-size:12px; font-weight:700; color:var(--muted); margin-bottom:8px;">申請理由文の材料</p>
+          <div class="g3">
+            <div class="field"><label>背景・課題</label><input id="cu-bg" placeholder="採用難・定着課題など" /></div>
+            <div class="field"><label>対象者の役割・期待</label><input id="cu-role" placeholder="現場中核・後進育成など" /></div>
+            <div class="field"><label>正社員化で実現したいこと</label><input id="cu-outcome" placeholder="定着率向上・技能継承など" /></div>
+          </div>
+          <div class="g3" style="margin-top:10px;">
+            <div class="field"><label>転換の手続き（就業規則の記載）</label><input id="cu-procedure" placeholder="面接試験、書類選考等" /></div>
+            <div class="field"><label>転換要件（客観的基準）</label><input id="cu-req" placeholder="勤続〇か月以上・評価B以上等" /></div>
+            <div class="field"><label>転換実施時期</label><input id="cu-timing" placeholder="毎年4月・10月など" /></div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="runCareerUp()">🔍 診断・書類生成</button>
+            <button class="btn btn-ghost" onclick="copyAll('cu')">📋 まとめてコピー</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /左カラム -->
+
+    <!-- 右カラム：結果 -->
+    <div>
+      <div class="loading" id="cu-loading">
+        <div class="loading-spinner"></div>
+        診断中...
+      </div>
+
+      <div id="cu-results" style="display:none;">
+
+        <!-- 総合判定 -->
+        <div class="panel">
+          <div class="panel-head">診断結果</div>
+          <div class="panel-body">
+            <div id="cu-rating" style="margin-bottom:6px;"></div>
+            <p id="cu-summary" style="color:var(--muted); font-size:13px; margin-bottom:12px;"></p>
+
+            <div id="cu-fatal" style="display:none; padding:12px; background:var(--red-soft); border:1px solid #fecaca; border-radius:10px; margin-bottom:10px; font-size:13px; color:var(--red);"></div>
+            <div id="cu-warn" style="display:none; padding:12px; background:var(--amber-soft); border:1px solid #fde68a; border-radius:10px; margin-bottom:10px; font-size:13px; color:var(--amber);"></div>
+
+            <div style="font-size:11px; color:var(--muted); padding:8px 12px; background:#f8f9ff; border-radius:8px;">
+              📌 <span id="cu-basis"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 試算助成額 -->
+        <div id="cu-subsidy-block" style="display:none;">
+          <div class="subsidy-box">
+            <div class="label">試算助成額（最大）</div>
+            <div class="subsidy-amount" id="cu-sub-total">—</div>
+            <div class="subsidy-sub" id="cu-sub-note"></div>
+            <div class="subsidy-grid">
+              <div class="subsidy-item">
+                <div class="s-label">1期あたり</div>
+                <div class="s-val" id="cu-sub-per"></div>
+              </div>
+              <div class="subsidy-item">
+                <div class="s-label">申請可能期数</div>
+                <div class="s-val" id="cu-sub-periods"></div>
+              </div>
+              <div class="subsidy-item">
+                <div class="s-label">加算合計</div>
+                <div class="s-val" id="cu-sub-add"></div>
+              </div>
+              <div class="subsidy-item">
+                <div class="s-label">企業規模</div>
+                <div class="s-val" id="cu-sub-size"></div>
+              </div>
+            </div>
+            <div class="subsidy-breakdown" id="cu-sub-breakdown"></div>
+          </div>
+        </div>
+
+        <!-- 申請期限 -->
+        <div class="deadline-box" id="cu-deadline-block" style="display:none;">
+          <h4>📅 申請期限情報</h4>
+          <pre id="cu-deadline-text" style="font-size:12px; font-family:'IBM Plex Mono',monospace; line-height:1.8; white-space:pre-wrap;"></pre>
+        </div>
+
+        <!-- 賃金詳細 -->
+        <div class="deadline-box" id="cu-wage-block" style="display:none;">
+          <h4>💴 賃金3%要件 計算詳細</h4>
+          <pre id="cu-wage-text" style="font-size:12px; font-family:'IBM Plex Mono',monospace; line-height:1.8; white-space:pre-wrap;"></pre>
+        </div>
+
+        <!-- チェック項目 -->
+        <div class="panel">
+          <div class="panel-head">要件チェック詳細</div>
+          <div class="panel-body">
+            <div class="check-list" id="cu-check-list"></div>
+          </div>
+        </div>
+
+        <!-- 出力ドキュメント -->
+        <div class="panel">
+          <div class="panel-head">出力ドキュメント</div>
+          <div class="panel-body">
+            <div class="out-tabs">
+              <button class="out-tab active" data-pane="cu-tab-docs" onclick="switchOutTab(this,'cu')">必要書類</button>
+              <button class="out-tab" data-pane="cu-tab-reason" onclick="switchOutTab(this,'cu')">申請理由文</button>
+              <button class="out-tab" data-pane="cu-tab-check" onclick="switchOutTab(this,'cu')">チェックリスト</button>
+            </div>
+            <div id="cu-tab-docs" class="out-pane active"><textarea class="out" id="cu-out-docs"></textarea></div>
+            <div id="cu-tab-reason" class="out-pane"><textarea class="out" id="cu-out-reason"></textarea></div>
+            <div id="cu-tab-check" class="out-pane"><textarea class="out" id="cu-out-check"></textarea></div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button class="btn btn-ghost" onclick="copyActive('cu')" style="font-size:12px;padding:7px 14px;">📋 コピー</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI相談 -->
+        <div class="panel">
+          <div class="panel-head">🤖 AI相談（個別質問）</div>
+          <div class="panel-body">
+            <p style="font-size:12px; color:var(--muted); margin-bottom:8px;">判定根拠・グレーゾーン・具体的な規定例などをAIに質問できます。</p>
+            <textarea id="cu-ai-q" placeholder="例：転換前の雇用区分が「契約社員」のとき、就業規則の賃金差はどのように確認すればよいですか？"></textarea>
+            <div style="margin-top:8px;">
+              <button class="btn btn-navy" onclick="askAI('career-up','cu')" style="font-size:12px;padding:7px 16px;">送信</button>
+            </div>
+            <div class="ai-answer" id="cu-ai-answer" style="display:none;"></div>
+          </div>
+        </div>
+
+      </div><!-- /cu-results -->
+    </div><!-- /右カラム -->
+
+  </div><!-- /layout -->
+</div><!-- /pane-career-up -->
+
+
+<!-- ========== 業務改善助成金 ========== -->
+<div id="pane-gyomu-kaizen" class="grant-pane">
+  <div class="layout">
+    <div>
+      <div class="panel">
+        <div class="panel-head"><span class="badge">1</span> 基本情報</div>
+        <div class="panel-body">
+          <div class="g3">
+            <div class="field"><label>顧客名（会社名）</label><input id="gk-company" placeholder="株式会社〇〇製作所" /></div>
+            <div class="field"><label>従業員数</label><input id="gk-employees" type="number" min="1" value="15" /></div>
+            <div class="field"><label>業種</label><input id="gk-industry" placeholder="製造業・介護・飲食など" /></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="badge">2</span> 賃金引上げ</div>
+        <div class="panel-body">
+          <div class="g3">
+            <div class="field"><label>現在の事業場内最低賃金（円/時）</label><input id="gk-wage-now" type="number" min="0" placeholder="例：1050" oninput="calcGkDiff()" /></div>
+            <div class="field"><label>引上げ後の最低賃金（円/時）</label><input id="gk-wage-plan" type="number" min="0" placeholder="例：1100" oninput="calcGkDiff()" /></div>
+            <div class="field"><label>引上げ額（自動計算）</label><input id="gk-wage-diff" readonly /></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="badge">3</span> 設備投資・取組内容</div>
+        <div class="panel-body">
+          <div class="g2">
+            <div class="field"><label>投資の種類</label><input id="gk-invest-type" placeholder="AI導入・機械購入・システム構築など" /></div>
+            <div class="field"><label>設備投資金額（円）</label><input id="gk-invest-amount" type="number" min="0" placeholder="例：2000000" /></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="runGyomuKaizen()">🔍 診断・試算</button>
+            <button class="btn btn-ghost" onclick="copyAll('gk')">📋 コピー</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="loading" id="gk-loading"><div class="loading-spinner"></div>診断中...</div>
+      <div id="gk-results" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">診断結果</div>
+          <div class="panel-body">
+            <div id="gk-rating" style="margin-bottom:6px;"></div>
+            <p id="gk-summary" style="color:var(--muted);font-size:13px;margin-bottom:10px;"></p>
+            <div id="gk-warn" style="display:none; padding:12px; background:var(--amber-soft); border:1px solid #fde68a; border-radius:10px; margin-bottom:10px; font-size:13px; color:var(--amber);"></div>
+          </div>
+        </div>
+        <div class="subsidy-box">
+          <div class="label">試算助成額</div>
+          <div class="subsidy-amount" id="gk-amount">—</div>
+          <div class="subsidy-sub" id="gk-rate"></div>
+        </div>
+        <div style="font-size:11px; color:var(--muted); padding:8px 12px; background:#f8f9ff; border-radius:8px; margin-top:8px;">
+          📌 <span id="gk-basis"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ========== 両立支援等助成金 ========== -->
+<div id="pane-ryoritsu" class="grant-pane">
+  <div class="layout">
+    <div>
+      <div class="panel">
+        <div class="panel-head"><span class="badge">1</span> 診断コースの選択・基本情報</div>
+        <div class="panel-body">
+          <div class="field">
+            <label>コース</label>
+            <select id="ry-course" onchange="toggleRyCourse()">
+              <option value="paternity">①出生時両立支援コース（子育てパパ支援助成金）</option>
+              <option value="daitai">②育休中等業務代替支援コース ★令和8年度拡充</option>
+              <option value="ikukyu">③育児休業等支援コース</option>
+              <option value="kaigo">④介護離職防止支援コース</option>
+              <option value="flexible">⑤柔軟な働き方選択制度等支援コース</option>
+              <option value="funin">⑥不妊治療及び女性の健康課題対応両立支援コース</option>
+            </select>
+          </div>
+          <div class="g2" style="margin-top:10px;">
+            <div class="field"><label>従業員数</label><input id="ry-employees" type="number" min="1" value="20" /></div>
+            <div class="field"><label>企業規模</label>
+              <select id="ry-size"><option value="small">中小企業（または300人以下）</option><option value="large">大企業・300人超</option></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ①出生時両立支援 -->
+      <div id="ry-pane-paternity" class="ry-course-pane">
+        <div class="panel">
+          <div class="panel-head"><span class="badge">2</span> 出生時両立支援コース（子育てパパ支援助成金）</div>
+          <div class="panel-body">
+            <div class="g3">
+              <div class="field"><label>何人目の対象者か</label>
+                <select id="ry-p-num"><option value="1">1人目（基本20万円）</option><option value="2">2人目（10万円）</option><option value="3">3人目（10万円）</option></select>
+              </div>
+              <div class="field"><label>男性育休の連続日数</label><input id="ry-p-days" type="number" min="0" value="5" /></div>
+              <div class="field"><label>出生後8週間以内に育休開始</label>
+                <select id="ry-p-8w"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+            </div>
+            <div class="g3" style="margin-top:10px;">
+              <div class="field"><label>雇用環境整備措置の実施数（①研修②相談③事例④周知⑤業務配分）</label>
+                <select id="ry-p-measures">
+                  <option value="1">1つ</option><option value="2">2つ</option><option value="3" selected>3つ</option>
+                  <option value="4">4つ（1人目→30万円）</option><option value="5">5つ（全て）</option>
+                </select>
+              </div>
+              <div class="field"><label>業務代替規定・体制整備済み</label>
+                <select id="ry-p-plan"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+              <div class="field"><label>一般事業主行動計画 届出済み</label>
+                <select id="ry-p-action"><option value="true">はい</option><option value="false">いいえ・未届</option></select>
+              </div>
+            </div>
+            <div class="g3" style="margin-top:10px;">
+              <div class="field"><label>産後パパ育休申出期限2週間超に設定</label>
+                <select id="ry-p-2w"><option value="false">いいえ（2週間前まで）</option><option value="true">はい（2週間超）</option></select>
+              </div>
+              <div class="field"><label>プラチナくるみん認定</label>
+                <select id="ry-p-platinum"><option value="false">なし</option><option value="true">あり（+15万円）</option></select>
+              </div>
+              <div class="field"><label>育児休業等情報公表加算</label>
+                <select id="ry-p-info"><option value="false">なし</option><option value="true">公表済（+2万円）</option></select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ②育休中等業務代替 -->
+      <div id="ry-pane-daitai" class="ry-course-pane" style="display:none;">
+        <div class="panel">
+          <div class="panel-head"><span class="badge">2</span> 育休中等業務代替支援コース <span style="color:var(--gold);font-size:11px;">★社労士委託で整備経費が最大20万円に増額</span></div>
+          <div class="panel-body">
+            <div class="field" style="margin-bottom:12px;"><label>取組区分</label>
+              <select id="ry-d-type">
+                <option value="手当支給_育休">手当支給等（育児休業）- 最大125万円</option>
+                <option value="手当支給_短時間">手当支給等（短時間勤務）- 最大110万円</option>
+                <option value="新規雇用">新規雇用（育児休業）- 1年以上で最大81万円（令和8年度）</option>
+              </select>
+            </div>
+            <div class="g3">
+              <div class="field"><label>育休取得日数</label><input id="ry-d-days" type="number" min="0" value="30" /></div>
+              <div class="field"><label>短時間勤務利用月数</label><input id="ry-d-tanki" type="number" min="0" value="3" /></div>
+              <div class="field"><label>代替期間（月数）新規雇用の場合</label><input id="ry-d-daitai" type="number" min="0" step="0.5" value="12" /></div>
+            </div>
+            <div class="g3" style="margin-top:10px;">
+              <div class="field"><label>支給した業務代替手当総額（円）</label><input id="ry-d-teate" type="number" min="0" value="90000" /></div>
+              <div class="field"><label>手当制度を就業規則等に規定済み</label>
+                <select id="ry-d-rule"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+              <div class="field"><label>業務代替の見直し・効率化実施済み</label>
+                <select id="ry-d-kaizen"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+            </div>
+            <div class="g3" style="margin-top:10px;">
+              <div class="field"><label>【重要】社労士に業務体制整備を委託</label>
+                <select id="ry-d-sharoshi">
+                  <option value="false">いいえ（整備経費：最大5万円）</option>
+                  <option value="true">はい（整備経費：最大20万円に増額）</option>
+                </select>
+              </div>
+              <div class="field"><label>有期雇用労働者が対象</label>
+                <select id="ry-d-yukikoyou"><option value="false">いいえ</option><option value="true">はい（+20万円加算）</option></select>
+              </div>
+              <div class="field"><label>情報公表加算</label>
+                <select id="ry-d-info"><option value="false">なし</option><option value="true">公表済（+2万円）</option></select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ③育児休業等支援 -->
+      <div id="ry-pane-ikukyu" class="ry-course-pane" style="display:none;">
+        <div class="panel">
+          <div class="panel-head"><span class="badge">2</span> 育児休業等支援コース（中小企業のみ）</div>
+          <div class="panel-body">
+            <div class="g3">
+              <div class="field"><label>申請区分</label>
+                <select id="ry-i-stage"><option value="育休取得時">育休取得時（30万円）</option><option value="職場復帰時">職場復帰時（30万円）</option></select>
+              </div>
+              <div class="field"><label>育休取得月数</label><input id="ry-i-months" type="number" min="0" step="0.5" value="3" /></div>
+              <div class="field"><label>情報公表加算</label>
+                <select id="ry-i-info"><option value="false">なし</option><option value="true">公表済（+2万円）</option></select>
+              </div>
+            </div>
+            <div class="g3" style="margin-top:10px;">
+              <div class="field"><label>面談・育休復帰支援プラン作成済み</label>
+                <select id="ry-i-mensdan"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+              <div class="field"><label>業務引継ぎ実施済み</label>
+                <select id="ry-i-hikitsuki"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+              <div class="field"><label>職場復帰後6か月継続就業（復帰時のみ）</label>
+                <select id="ry-i-fukki"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ④介護 -->
+      <div id="ry-pane-kaigo" class="ry-course-pane" style="display:none;">
+        <div class="panel">
+          <div class="panel-head"><span class="badge">2</span> 介護離職防止支援コース（中小企業のみ）</div>
+          <div class="panel-body">
+            <div class="g3">
+              <div class="field"><label>取組区分</label>
+                <select id="ry-k-type">
+                  <option value="介護休業">介護休業取得＋職場復帰（最大60万円）</option>
+                  <option value="介護両立支援制度">介護両立支援制度利用（最大30万円）</option>
+                  <option value="新規雇用">業務代替要員新規雇用（67.5万円）</option>
+                  <option value="有給化">介護休暇有給化（20万円）</option>
+                </select>
+              </div>
+              <div class="field"><label>介護支援プラン・面談実施済み</label>
+                <select id="ry-k-plan"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+              <div class="field"><label>介護休業日数（所定労働日）</label><input id="ry-k-days" type="number" min="0" value="5" /></div>
+            </div>
+            <div class="g3" style="margin-top:10px;">
+              <div class="field"><label>介護両立支援制度の導入数</label>
+                <select id="ry-k-seido"><option value="1">1つ</option><option value="2">2つ（60日以上で加算）</option><option value="3">3つ以上</option></select>
+              </div>
+              <div class="field"><label>制度利用日数</label><input id="ry-k-seido-days" type="number" min="0" value="30" /></div>
+              <div class="field"><label>情報公表加算</label>
+                <select id="ry-k-info"><option value="false">なし</option><option value="true">公表済（+2万円）</option></select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑤柔軟な働き方 -->
+      <div id="ry-pane-flexible" class="ry-course-pane" style="display:none;">
+        <div class="panel">
+          <div class="panel-head"><span class="badge">2</span> 柔軟な働き方選択制度等支援コース（中小企業のみ）</div>
+          <div class="panel-body">
+            <div class="g3">
+              <div class="field"><label>導入した制度数</label>
+                <select id="ry-f-seido">
+                  <option value="2">2つ（20万円/人）</option>
+                  <option value="3" selected>3つ以上（25万円/人）</option>
+                </select>
+                <span class="hint">①フレックス/時差 ②テレワーク ③短時間 ④保育費補助 ⑤看護等休暇有給</span>
+              </div>
+              <div class="field"><label>柔軟な働き方支援プラン・面談済み</label>
+                <select id="ry-f-plan"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+              <div class="field"><label>制度を就業規則等に規定済み</label>
+                <select id="ry-f-kisoku"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+            </div>
+            <div class="g2" style="margin-top:10px;">
+              <div class="field"><label>情報公表加算</label>
+                <select id="ry-f-info"><option value="false">なし</option><option value="true">公表済（+2万円）</option></select>
+              </div>
+              <div class="field"><label>障害のある子等・18歳年度末まで延長加算</label>
+                <select id="ry-f-shogai"><option value="false">なし</option><option value="true">あり（+20万円）</option></select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑥不妊治療・女性健康 -->
+      <div id="ry-pane-funin" class="ry-course-pane" style="display:none;">
+        <div class="panel">
+          <div class="panel-head"><span class="badge">2</span> 不妊治療及び女性の健康課題対応両立支援コース（中小企業のみ）<span style="color:var(--gold);font-size:11px;">★令和8年度：月経・更年期も追加</span></div>
+          <div class="panel-body">
+            <div class="field" style="margin-bottom:12px;">
+              <label>申請区分</label>
+              <select id="ry-fn-type">
+                <option value="A_funin">A：不妊治療のための両立支援制度利用（30万円）</option>
+                <option value="B_gekkei">B：月経に起因する症状への対応支援制度利用（30万円）★令和8年度</option>
+                <option value="C_konenki">C：更年期に起因する症状への対応支援制度利用（30万円）★令和8年度</option>
+              </select>
+              <span class="hint">A・B・Cは各1事業主1回限り。要件を満たせば最大3回申請可能</span>
+            </div>
+            <div class="g3">
+              <div class="field"><label>両立支援制度の就業規則等への規定済み</label>
+                <select id="ry-fn-seido"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+              <div class="field"><label>支援する旨の社内周知済み</label>
+                <select id="ry-fn-shuuchi"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+              <div class="field"><label>両立支援担当者の選任済み（令和8年度から必須）</label>
+                <select id="ry-fn-tanto"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+            </div>
+            <div class="g3" style="margin-top:10px;">
+              <div class="field"><label>両立支援プラン・面談実施済み</label>
+                <select id="ry-fn-plan"><option value="true">はい</option><option value="false">いいえ</option></select>
+              </div>
+              <div class="field"><label>1年度内の制度利用回数</label>
+                <input id="ry-fn-riyo" type="number" min="0" value="5" /><span class="hint">5回以上必要</span>
+              </div>
+              <div class="field"><label>連続長期休暇取得日数（A区分のみ：加算20日以上）</label>
+                <input id="ry-fn-chouki" type="number" min="0" value="0" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-body">
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="runRyoritsu()">🔍 診断・書類生成</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右カラム -->
+    <div>
+      <div class="loading" id="ry-loading"><div class="loading-spinner"></div>診断中...</div>
+      <div id="ry-results" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">診断結果</div>
+          <div class="panel-body">
+            <div id="ry-rating" style="margin-bottom:6px;"></div>
+            <p id="ry-course-name" style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px;"></p>
+            <div id="ry-warn" style="display:none; padding:12px; background:var(--amber-soft); border:1px solid #fde68a; border-radius:10px; margin-bottom:10px; font-size:13px; color:var(--amber);"></div>
+            <div style="font-size:11px; color:var(--muted); padding:8px 12px; background:#f8f9ff; border-radius:8px;">📌 令和8年度版 両立支援等助成金支給申請の手引きに基づく判定</div>
+          </div>
+        </div>
+        <div class="subsidy-box">
+          <div class="label">試算助成額（目安）</div>
+          <div class="subsidy-amount" id="ry-amount">—</div>
+          <div class="subsidy-breakdown" id="ry-amount-detail"></div>
+        </div>
+        <div style="background:linear-gradient(135deg,#1a4a3a,#0d3020);border-radius:var(--radius);padding:16px;margin-bottom:14px;">
+          <div style="font-size:11px;color:rgba(255,255,255,0.6);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">👩‍💼 社労士関与のメリット</div>
+          <div id="ry-sharoshi" style="font-size:13px;color:rgba(255,255,255,0.9);line-height:1.7;"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">要件チェック詳細</div>
+          <div class="panel-body"><div class="check-list" id="ry-check-list"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">必要書類リスト</div>
+          <div class="panel-body">
+            <textarea class="out" id="ry-out-docs" style="min-height:200px;"></textarea>
+            <div style="margin-top:8px;"><button class="btn btn-ghost" onclick="navigator.clipboard.writeText(document.getElementById("ry-out-docs").value).then(()=>alert("コピーしました！"))" style="font-size:12px;padding:7px 14px;">📋 コピー</button></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">🤖 AI相談（両立支援等助成金）</div>
+          <div class="panel-body">
+            <p style="font-size:12px; color:var(--muted); margin-bottom:8px;">育休取得要件・業務代替規定・介護支援プランの作成など個別に質問できます。</p>
+            <textarea id="ry-ai-q" placeholder="例：育休中等業務代替支援コースで社労士が委託を受ける場合、委託契約書はどのような内容が必要ですか？"></textarea>
+            <div style="margin-top:8px;"><button class="btn btn-navy" onclick="askAI("ryoritsu","ry")" style="font-size:12px;padding:7px 16px;">送信</button></div>
+            <div class="ai-answer" id="ry-ai-answer" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="disclaimer">
+  ⚠️ 本ツールは申請可否を最終判断するものではありません。判定はあくまで参考であり、最終的には担当社労士・提出先の労働局・ハローワークの最新案内と様式に従ってください。令和8年4月8日版パンフレット（PL080408 No.16）に基づいています。添付書類の加工・転記は不正受給認定リスクになり得ます（原本/複写が原則）。
+</div>
+
+</main>
+
+<script>
+// ===== 設定 =====
+const API_BASE = "https://joseikin-ai.onrender.com";
+
+const $ = (id) => document.getElementById(id);
+const val = (id) => ($( id)?.value || "").trim();
+const bool = (id) => $(id)?.value === "true";
+const num = (id) => Number($(id)?.value || 0);
+
+// ===== タブ切替 =====
+function switchGrant(g) {
+  document.querySelectorAll(".grant-pane").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".grant-tab").forEach(t => t.classList.remove("active"));
+  $(`pane-${g}`).classList.add("active");
+  event.target.classList.add("active");
+}
+
+function switchOutTab(btn, prefix) {
+  const paneId = btn.dataset.pane;
+  btn.closest(".panel-body").querySelectorAll(".out-tab").forEach(t => t.classList.remove("active"));
+  btn.closest(".panel-body").querySelectorAll(".out-pane").forEach(p => p.classList.remove("active"));
+  btn.classList.add("active");
+  $(paneId).classList.add("active");
+}
+
+// ===== 時給換算切替 =====
+function toggleHourly() {
+  const h = val("cu-wage-method") === "hourly";
+  $("wage-total-section").style.display = h ? "none" : "block";
+  $("wage-hourly-section").style.display = h ? "block" : "none";
+  if (h) calcWageRateH(); else calcWageRate();
+}
+
+// ===== 賃金増額率リアルタイム計算 =====
+function calcWageRate() {
+  const before = num("cu-wage-before");
+  const after = num("cu-wage-after");
+  if (!before) { $("wage-calc-result").textContent = "— 転換前賃金を入力"; return; }
+  const pct = Math.floor((after - before) / before * 1000) / 10;
+  const ok = pct >= 3.0;
+  $("wage-calc-result").textContent = `${pct.toFixed(1)}%`;
+  $("wage-calc-result").className = "calc-result " + (ok ? "ok" : "ng");
+  $("wage-calc-detail").textContent = `(${after.toLocaleString()} - ${before.toLocaleString()}) / ${before.toLocaleString()} × 100 = ${pct.toFixed(1)}%（小数点第1位以下切捨）`;
+}
+
+function calcWageRateH() {
+  const wb = num("cu-wage-before-h"), hb = num("cu-hours-before");
+  const wa = num("cu-wage-after-h"), ha = num("cu-hours-after");
+  if (!wb || !hb || !ha) { $("wage-calc-result").textContent = "— 全項目を入力"; return; }
+  const rb = wb / hb, ra = wa / ha;
+  const pct = Math.floor((ra - rb) / rb * 1000) / 10;
+  const ok = pct >= 3.0;
+  $("wage-calc-result").textContent = `${pct.toFixed(1)}%`;
+  $("wage-calc-result").className = "calc-result " + (ok ? "ok" : "ng");
+  $("wage-calc-detail").textContent = `時給換算: 前${rb.toFixed(1)}円 → 後${ra.toFixed(1)}円 → ${pct.toFixed(1)}%`;
+}
+
+// ===== 申請期限プレビュー =====
+function calcDeadline() {
+  const payStr = val("cu-paydate");
+  const submitStr = val("cu-submit");
+  if (!payStr) return;
+
+  const pay = new Date(payStr);
+  const deadline = new Date(pay);
+  deadline.setMonth(deadline.getMonth() + 2);
+  // 2か月後の前日
+  const end = new Date(deadline);
+  end.setDate(end.getDate() - 1);
+
+  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+  let status = "（提出予定日が未設定）";
+  let statusColor = "";
+  if (submitStr) {
+    const submit = new Date(submitStr);
+    const ok = submit <= end;
+    status = ok ? "✅ 期限内" : "❌ 期限超過";
+    statusColor = ok ? "var(--green)" : "var(--red)";
+  }
+
+  $("deadline-preview").style.display = "block";
+  $("deadline-grid").innerHTML = `
+    <div class="deadline-item"><div class="dl">6か月賃金支払日</div><div class="dv">${payStr}</div></div>
+    <div class="deadline-item"><div class="dl">申請期限（目安）</div><div class="dv">${fmt(end)}</div></div>
+    <div class="deadline-item"><div class="dl">提出予定日</div><div class="dv">${submitStr || "—"}</div></div>
+    <div class="deadline-item"><div class="dl">状態</div><div class="dv" style="color:${statusColor}">${status}</div></div>
+  `;
+}
+
+// ===== キャリアアップ診断 =====
+async function runCareerUp() {
+  $("cu-loading").classList.add("active");
+  $("cu-results").style.display = "none";
+
+  const useHourly = val("cu-wage-method") === "hourly";
+
+  const payload = {
+    company_name: val("cu-company") || "（未入力）",
+    employee_count: num("cu-employees") || 20,
+    is_large_company: val("cu-size") === "large",
+    plan_start: val("cu-plan-start") || "2026-04-01",
+    plan_end: val("cu-plan-end") || "2031-03-31",
+    conversion_rule_exists: bool("cu-rule-exists"),
+    conversion_rule_has_objective: bool("cu-rule-objective"),
+    regular_has_bonus_or_retirement: bool("cu-bonus-retire"),
+    regular_has_raise: bool("cu-raise"),
+    nonregular_wage_diff: bool("cu-wage-diff"),
+    work_rules_not_edited: bool("cu-original"),
+    new_conversion_rule: bool("cu-new-rule"),
+    new_diverse_regular_rule: bool("cu-new-diverse"),
+    info_published: bool("cu-info-pub"),
+    worker_name: val("cu-worker"),
+    hire_date: val("cu-hire") || "2025-07-01",
+    conversion_date: val("cu-conv") || "2026-04-01",
+    employment_before: val("cu-before") || "有期",
+    employment_after: val("cu-after") || "正社員",
+    tenure_months: num("cu-tenure") || 6,
+    is_new_graduate: bool("cu-newgrad"),
+    months_since_grad: val("cu-grad-months") ? num("cu-grad-months") : null,
+    foreign_excluded: bool("cu-foreign"),
+    has_probation: bool("cu-probation"),
+    over_retire: bool("cu-retire"),
+    social_insurance: bool("cu-social"),
+    priority_type: val("cu-priority") || "none",
+    past5y_regular_months: val("cu-past5y") ? num("cu-past5y") : null,
+    past1y_regular: bool("cu-past1y"),
+    use_hourly_compare: useHourly,
+    wage_before: useHourly ? num("cu-wage-before-h") : num("cu-wage-before"),
+    wage_after: useHourly ? num("cu-wage-after-h") : num("cu-wage-after"),
+    hours_before: useHourly ? num("cu-hours-before") : null,
+    hours_after: useHourly ? num("cu-hours-after") : null,
+    six_month_pay_date: val("cu-paydate") || "2026-10-15",
+    submit_date: val("cu-submit") || "2026-11-01",
+    payroll_closing_day: val("cu-closing") ? num("cu-closing") : null,
+    background_issue: val("cu-bg"),
+    worker_role_expectation: val("cu-role"),
+    expected_outcome: val("cu-outcome"),
+    conversion_procedure: val("cu-procedure"),
+    conversion_requirements: val("cu-req"),
+    conversion_timing: val("cu-timing"),
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/diagnose/career-up`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    renderCareerUpResult(d);
+    $("cu-results").style.display = "block";
+  } catch (e) {
+    alert(`エラー：${e.message}\n\nAPIサーバー（${API_BASE}）に接続できません。\nRenderのURLを確認してください。`);
+  } finally {
+    $("cu-loading").classList.remove("active");
+  }
+}
+
+function renderCareerUpResult(d) {
+  // レーティング
+  const rEl = $("cu-rating");
+  const cls = d.rating.startsWith("A") ? "rating-a" : d.rating.startsWith("B") ? "rating-b" : "rating-c";
+  rEl.innerHTML = `<span class="${cls}">${d.rating}</span>`;
+  $("cu-summary").textContent = d.summary;
+  $("cu-basis").textContent = d.basis;
+
+  // 致命的NG
+  if (d.fatal?.length) {
+    $("cu-fatal").style.display = "block";
+    $("cu-fatal").innerHTML = "<strong>❌ 要件未達（NG項目）：</strong><ul style='margin-top:6px;padding-left:18px;'>" + d.fatal.map(f => `<li style='margin-bottom:4px;'>${f}</li>`).join("") + "</ul>";
+  } else {
+    $("cu-fatal").style.display = "none";
+  }
+
+  // 警告
+  if (d.warnings?.length) {
+    $("cu-warn").style.display = "block";
+    $("cu-warn").innerHTML = "<strong>⚠️ 注意事項：</strong><ul style='margin-top:6px;padding-left:18px;'>" + d.warnings.map(w => `<li style='margin-bottom:4px;'>${w}</li>`).join("") + "</ul>";
+  } else {
+    $("cu-warn").style.display = "none";
+  }
+
+  // チェック項目
+  const cl = $("cu-check-list");
+  cl.innerHTML = "";
+  if (d.checks) {
+    d.checks.forEach(c => {
+      const icon = c.level === "OK" ? "✅" : c.level === "WARN" ? "⚠️" : "❌";
+      cl.innerHTML += `
+        <div class="check-item ${c.level.toLowerCase()}">
+          <div class="check-icon">${icon}</div>
+          <div>
+            <div class="check-title">${c.title}</div>
+            <div class="check-detail">${c.detail}</div>
+          </div>
+        </div>`;
+    });
+  }
+
+  // 試算助成額
+  if (d.subsidy) {
+    $("cu-subsidy-block").style.display = "block";
+    $("cu-sub-total").textContent = `${d.subsidy.grand_total.toLocaleString()}円`;
+    $("cu-sub-note").textContent = `基本支給 ${d.subsidy.total_amount.toLocaleString()}円 + 加算 ${d.subsidy.total_addition.toLocaleString()}円`;
+    $("cu-sub-per").textContent = `${d.subsidy.base_amount.toLocaleString()}円`;
+    $("cu-sub-periods").textContent = `${d.subsidy.period_count}期`;
+    $("cu-sub-add").textContent = d.subsidy.total_addition > 0 ? `${d.subsidy.total_addition.toLocaleString()}円` : "なし";
+    $("cu-sub-size").textContent = val("cu-size") === "large" ? "大企業" : "中小企業";
+    $("cu-sub-breakdown").textContent = d.subsidy.breakdown;
+  } else {
+    $("cu-subsidy-block").style.display = "none";
+  }
+
+  // 申請期限
+  if (d.deadline_info) {
+    $("cu-deadline-block").style.display = "block";
+    $("cu-deadline-text").textContent = d.deadline_info;
+  }
+
+  // 賃金詳細
+  if (d.wage_detail) {
+    $("cu-wage-block").style.display = "block";
+    $("cu-wage-text").textContent = d.wage_detail;
+  }
+
+  // 出力ドキュメント
+  $("cu-out-docs").value = d.missing_documents;
+  $("cu-out-reason").value = d.reason_draft;
+  $("cu-out-check").value = d.checklist;
+}
+
+// ===== 業務改善診断 =====
+function calcGkDiff() {
+  const now = num("gk-wage-now");
+  const plan = num("gk-wage-plan");
+  $("gk-wage-diff").value = (plan - now > 0) ? `${plan - now}円` : "—";
+}
+
+async function runGyomuKaizen() {
+  $("gk-loading").classList.add("active");
+  $("gk-results").style.display = "none";
+  const wageNow = num("gk-wage-now");
+  const wagePlan = num("gk-wage-plan");
+  const payload = {
+    company_name: val("gk-company") || "（未入力）",
+    employee_count: num("gk-employees") || 15,
+    current_min_wage: wageNow,
+    planned_min_wage: wagePlan,
+    wage_increase_amount: wagePlan - wageNow,
+    investment_type: val("gk-invest-type"),
+    investment_amount: num("gk-invest-amount"),
+    industry: val("gk-industry"),
+  };
+  try {
+    const res = await fetch(`${API_BASE}/api/diagnose/gyomu-kaizen`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    const cls = d.rating.startsWith("A") ? "rating-a" : d.rating.startsWith("B") ? "rating-b" : "rating-c";
+    $("gk-rating").innerHTML = `<span class="${cls}">${d.rating}</span>`;
+    $("gk-summary").textContent = d.summary;
+    $("gk-amount").textContent = d.estimated_subsidy;
+    $("gk-rate").textContent = `助成率：${d.subsidy_rate}`;
+    $("gk-basis").textContent = d.basis;
+    if (d.warnings?.length) {
+      $("gk-warn").style.display = "block";
+      $("gk-warn").innerHTML = "<strong>⚠️ 注意事項：</strong><ul style='margin-top:6px;padding-left:18px;'>" + d.warnings.map(w => `<li>${w}</li>`).join("") + "</ul>";
+    } else {
+      $("gk-warn").style.display = "none";
+    }
+    $("gk-results").style.display = "block";
+  } catch (e) {
+    alert(`エラー：${e.message}`);
+  } finally {
+    $("gk-loading").classList.remove("active");
+  }
+}
+
+// ===== AI相談 =====
+async function askAI(grantType, prefix) {
+  const q = val(`${prefix}-ai-q`);
+  if (!q) return alert("質問を入力してください。");
+  const answerEl = $(`${prefix}-ai-answer`);
+  answerEl.style.display = "block";
+  answerEl.textContent = "回答中...";
+  try {
+    const res = await fetch(`${API_BASE}/api/ai-advice`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ grant_type: grantType, question: q, context: {} }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    answerEl.textContent = d.answer;
+  } catch (e) {
+    answerEl.textContent = `エラー：${e.message}`;
+  }
+}
+
+// ===== コピー =====
+function copyAll(prefix) {
+  const tabs = { cu: ["cu-out-docs","cu-out-reason","cu-out-check"], gk: [] };
+  const ids = tabs[prefix] || [];
+  const text = ids.map(id => {
+    const el = $(id);
+    return el ? `=== ${el.previousElementSibling?.textContent || id} ===\n${el.value}` : "";
+  }).filter(Boolean).join("\n\n");
+  navigator.clipboard.writeText(text).then(() => alert("コピーしました！"));
+}
+
+function copyActive(prefix) {
+  const active = document.querySelector(`#${prefix}-results .out-pane.active textarea`);
+  if (active) navigator.clipboard.writeText(active.value).then(() => alert("コピーしました！"));
+}
+
+// ===== PDF出力 =====
+function exportPdf() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: "mm", format: "a4" });
+  pdf.setFont("helvetica");
+  pdf.setFontSize(12);
+  pdf.text("Career-Up Grant Diagnosis Report", 20, 20);
+  pdf.setFontSize(10);
+  let y = 32;
+  const company = val("cu-company") || "—";
+  const worker = val("cu-worker") || "—";
+  pdf.text(`Company: ${company}  /  Worker: ${worker}`, 20, y); y += 8;
+  const rating = $("cu-rating")?.textContent?.trim() || "—";
+  pdf.text(`Rating: ${rating}`, 20, y); y += 12;
+  const docs = $("cu-out-docs")?.value || "";
+  pdf.setFontSize(9);
+  const lines = pdf.splitTextToSize(docs, 170);
+  lines.forEach(l => { if (y > 270) { pdf.addPage(); y = 20; } pdf.text(l, 20, y); y += 5; });
+  pdf.save("career_up_diagnosis.pdf");
+}
+
+// ===== 保存・復元 =====
+const SAVE_KEYS = [
+  "cu-company","cu-employees","cu-size","cu-plan-start","cu-plan-end",
+  "cu-rule-exists","cu-rule-objective","cu-bonus-retire","cu-raise","cu-wage-diff","cu-original",
+  "cu-new-rule","cu-new-diverse","cu-info-pub",
+  "cu-worker","cu-hire","cu-conv","cu-tenure","cu-before","cu-after",
+  "cu-probation","cu-social","cu-foreign","cu-newgrad","cu-retire",
+  "cu-priority","cu-past5y","cu-past1y",
+  "cu-wage-method","cu-wage-before","cu-wage-after",
+  "cu-wage-before-h","cu-wage-after-h","cu-hours-before","cu-hours-after",
+  "cu-paydate","cu-submit","cu-closing",
+  "cu-bg","cu-role","cu-outcome","cu-procedure","cu-req","cu-timing",
+];
+
+function saveDraft() {
+  const d = {};
+  SAVE_KEYS.forEach(k => { const el = $(k); if (el) d[k] = el.value; });
+  localStorage.setItem("joseikin_draft_v2", JSON.stringify(d));
+  alert("保存しました。");
+}
+
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem("joseikin_draft_v2");
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    Object.entries(d).forEach(([k, v]) => { const el = $(k); if (el) el.value = v; });
+    toggleHourly();
+    calcWageRate();
+    calcDeadline();
+  } catch (e) {}
+}
+
+function clearAll() {
+  if (!confirm("入力内容をクリアしますか？")) return;
+  SAVE_KEYS.forEach(k => { const el = $(k); if (el && el.tagName === "INPUT") el.value = ""; });
+  $("cu-results").style.display = "none";
+}
+
+// ===== デモ読込 =====
+function loadDemo() {
+  const today = new Date();
+  const y = today.getFullYear();
+
+  $("cu-company").value = "株式会社サンプル商事";
+  $("cu-employees").value = "25";
+  $("cu-size").value = "small";
+  $("cu-plan-start").value = `${y}-04-01`;
+  $("cu-plan-end").value = `${y+4}-03-31`;
+  $("cu-rule-exists").value = "true";
+  $("cu-rule-objective").value = "true";
+  $("cu-bonus-retire").value = "true";
+  $("cu-raise").value = "true";
+  $("cu-wage-diff").value = "true";
+  $("cu-original").value = "true";
+  $("cu-new-rule").value = "false";
+  $("cu-new-diverse").value = "false";
+  $("cu-info-pub").value = "false";
+  $("cu-worker").value = "田中 花子";
+  $("cu-hire").value = `${y-1}-07-01`;
+  $("cu-conv").value = `${y}-04-01`;
+  $("cu-tenure").value = "9";
+  $("cu-before").value = "有期";
+  $("cu-after").value = "正社員";
+  $("cu-probation").value = "false";
+  $("cu-social").value = "true";
+  $("cu-foreign").value = "false";
+  $("cu-newgrad").value = "false";
+  $("cu-retire").value = "false";
+  $("cu-priority").value = "none";
+  $("cu-wage-method").value = "total";
+  $("cu-wage-before").value = "1200000";
+  $("cu-wage-after").value = "1260000";
+  $("cu-paydate").value = `${y}-10-15`;
+  $("cu-submit").value = `${y}-11-01`;
+  $("cu-bg").value = "採用難・正社員希望者の定着";
+  $("cu-role").value = "販売・接客の中核担当";
+  $("cu-outcome").value = "長期定着と技能継承";
+  $("cu-procedure").value = "面接試験・筆記試験";
+  $("cu-req").value = "勤続6か月以上・直近評価B以上";
+  $("cu-timing").value = "毎年4月・10月";
+
+  toggleHourly();
+  calcWageRate();
+  calcDeadline();
+  alert("デモデータを読み込みました。「診断・書類生成」ボタンを押してください。");
+}
+
+// ===== 初期化 =====
+restoreDraft();
+calcWageRate();
+calcDeadline();
+
+// ===== 両立支援等助成金 =====
+function toggleRyCourse() {
+  const course = val("ry-course");
+  const map = {
+    paternity: "ry-pane-paternity",
+    daitai: "ry-pane-daitai",
+    ikukyu: "ry-pane-ikukyu",
+    kaigo: "ry-pane-kaigo",
+    flexible: "ry-pane-flexible",
+    funin: "ry-pane-funin",
+  };
+  Object.values(map).forEach(id => { const el = $(id); if(el) el.style.display = "none"; });
+  const target = map[course];
+  if (target && $(target)) $(target).style.display = "block";
+}
+
+async function runRyoritsu() {
+  $("ry-loading").classList.add("active");
+  $("ry-results").style.display = "none";
+  const course = val("ry-course");
+  const isSmall = val("ry-size") === "small";
+  const employees = num("ry-employees") || 20;
+
+  let endpoint = "";
+  let payload = {};
+
+  if (course === "paternity") {
+    endpoint = "paternity-leave";
+    payload = {
+      employee_count: employees,
+      male_ikukyu_days: num("ry-p-days") || 5,
+      birth_within_8weeks: $("ry-p-8w").value === "true",
+      env_measures_count: num("ry-p-measures") || 3,
+      has_business_plan: $("ry-p-plan").value === "true",
+      action_plan_filed: $("ry-p-action").value === "true",
+      target_person_num: num("ry-p-num") || 1,
+      申出期限_超2週間: $("ry-p-2w").value === "true",
+      is_platinum_kurumin: $("ry-p-platinum").value === "true",
+      info_published: $("ry-p-info").value === "true",
+    };
+  } else if (course === "daitai") {
+    endpoint = "gyomu-daitai";
+    payload = {
+      employee_count: employees,
+      support_type: val("ry-d-type") || "手当支給_育休",
+      ikukyu_days: num("ry-d-days") || 30,
+      tanki_months: num("ry-d-tanki") || 3,
+      daitai_months: num("ry-d-daitai") || 12,
+      teate_total: num("ry-d-teate") || 90000,
+      has_rule: $("ry-d-rule").value === "true",
+      has_kaizen: $("ry-d-kaizen").value === "true",
+      sharoshi_ittaku: $("ry-d-sharoshi").value === "true",
+      is_yukikoyou: $("ry-d-yukikoyou").value === "true",
+      info_published: $("ry-d-info").value === "true",
+      is_platinum: false,
+    };
+  } else if (course === "ikukyu") {
+    endpoint = "ikukyu-shien";
+    payload = {
+      is_small_company: isSmall,
+      stage: val("ry-i-stage") || "育休取得時",
+      has_mensdan: $("ry-i-mensdan").value === "true",
+      has_hikitsuki: $("ry-i-hikitsuki").value === "true",
+      ikukyu_months: num("ry-i-months") || 3,
+      fukki_shuro: $("ry-i-fukki").value === "true",
+      info_published: $("ry-i-info").value === "true",
+    };
+  } else if (course === "kaigo") {
+    endpoint = "kaigo";
+    payload = {
+      is_small_company: isSmall,
+      support_type: val("ry-k-type") || "介護休業",
+      has_plan: $("ry-k-plan").value === "true",
+      kaigo_kyugo_days: num("ry-k-days") || 5,
+      seido_count: num("ry-k-seido") || 1,
+      seido_days: num("ry-k-seido-days") || 30,
+      yuko_kazan: false,
+      info_published: $("ry-k-info").value === "true",
+    };
+  } else if (course === "flexible") {
+    endpoint = "flexible";
+    payload = {
+      is_small_company: isSmall,
+      seido_count: num("ry-f-seido") || 3,
+      has_plan: $("ry-f-plan").value === "true",
+      has_shuugyou_kisoku: $("ry-f-kisoku").value === "true",
+      riyo_months: 6.0,
+      info_published: $("ry-f-info").value === "true",
+      shogaiji_kakucho: $("ry-f-shogai").value === "true",
+    };
+  } else if (course === "funin") {
+    endpoint = "funin";
+    payload = {
+      is_small_company: isSmall,
+      support_type: val("ry-fn-type") || "A_funin",
+      has_kyuka_seido: $("ry-fn-seido").value === "true",
+      has_shuuchi: $("ry-fn-shuuchi").value === "true",
+      has_plan: $("ry-fn-plan").value === "true",
+      has_tanto: $("ry-fn-tanto").value === "true",
+      riyo_count: num("ry-fn-riyo") || 5,
+      chouki_kyuka_days: num("ry-fn-chouki") || 0,
+    };
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/diagnose/${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    renderRyoritsuResult(d);
+    $("ry-results").style.display = "block";
+  } catch (e) {
+    alert(`エラー：${e.message}\n\nAPIサーバー（${API_BASE}）に接続できません。`);
+  } finally {
+    $("ry-loading").classList.remove("active");
+  }
+}
+
+function renderRyoritsuResult(d) {
+  const cls = d.rating.startsWith("A") ? "rating-a" : d.rating.startsWith("B") ? "rating-b" : "rating-c";
+  $("ry-rating").innerHTML = `<span class="${cls}">${d.rating}</span>`;
+  $("ry-course-name").textContent = d.course_name;
+  $("ry-amount").textContent = `${d.max_amount.toLocaleString()}円`;
+  $("ry-amount-detail").textContent = d.amount_detail;
+  $("ry-sharoshi").textContent = d.sharoshi_merit;
+
+  if (d.warnings?.length) {
+    $("ry-warn").style.display = "block";
+    $("ry-warn").innerHTML = "<strong>⚠️ 注意事項：</strong><ul style='margin-top:6px;padding-left:18px;'>" +
+      d.warnings.map(w => `<li style='margin-bottom:4px;'>${w}</li>`).join("") + "</ul>";
+  } else {
+    $("ry-warn").style.display = "none";
+  }
+
+  const cl = $("ry-check-list");
+  cl.innerHTML = "";
+  if (d.checks) {
+    d.checks.forEach(c => {
+      const icon = c.level === "OK" ? "✅" : c.level === "WARN" ? "⚠️" : "❌";
+      cl.innerHTML += `<div class="check-item ${c.level.toLowerCase()}">
+        <div class="check-icon">${icon}</div>
+        <div><div class="check-title">${c.title}</div><div class="check-detail">${c.detail}</div></div>
+      </div>`;
+    });
+  }
+
+  const docs = d.missing_docs || [];
+  $("ry-out-docs").value = "【必要書類リスト】\n" + docs.map(d => `・${d}`).join("\n");
+}
+
+// 初期表示
+toggleRyCourse();
+</script>
+
+</body>
+</html>
